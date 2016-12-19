@@ -9,7 +9,9 @@ def vertx  = io.vertx.groovy.core.Vertx.vertx()
 def router = io.vertx.groovy.ext.web.Router.router(vertx)
 def engine = io.vertx.groovy.ext.web.templ.HandlebarsTemplateEngine.create()
 
-router.get().handler({ context ->
+def prefix = ''
+
+router.get(prefix+'/indexes').handler({ context ->
   vertx.createHttpClient().get(9200, '127.0.0.1','/_aliases', { response ->
     response.bodyHandler({ body ->
       context.put("indexes", body.toJsonObject())
@@ -27,4 +29,7 @@ router.get().handler({ context ->
   }).end()
 })
 
-vertx.createHttpServer().requestHandler(router.&accept).listen(8200)
+
+router.route(prefix+'/*').handler(io.vertx.groovy.ext.web.handler.StaticHandler.create())
+
+vertx.createHttpServer().requestHandler(router.&accept).listen(8100,'0.0.0.0')
